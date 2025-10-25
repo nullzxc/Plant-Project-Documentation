@@ -10,7 +10,7 @@
     />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      /* Minimal extras for code blocks & print */
+      /* Minimal extras for code blocks, inline code & print */
       pre {
         overflow: auto;
       }
@@ -18,6 +18,14 @@
       pre {
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
           "Liberation Mono", "Courier New", monospace;
+      }
+      /* inline code (not inside pre) */
+      :not(pre) > code {
+        background: rgba(148, 163, 184, 0.14); /* slate-400/14 */
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 0.15rem 0.4rem;
+        border-radius: 0.4rem;
+        font-size: 0.95em;
       }
       @media print {
         .no-print {
@@ -33,6 +41,17 @@
         }
       }
     </style>
+
+    <!-- Prism.js syntax highlighting -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-markdown.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-yaml.min.js"></script>
   </head>
   <body class="bg-slate-950 text-slate-100">
     <!-- Background layer (fixes gradient issue, independent of content) -->
@@ -62,8 +81,8 @@
       <div class="mx-auto max-w-6xl px-4">
         <div class="flex h-16 items-center justify-between">
           <a href="#overview" class="flex items-center gap-2 font-semibold">
-            <span class="text-xl">🌿</span
-            ><span class="tracking-wide">PWS</span>
+            <span class="text-2xl">🌿</span
+            ><span class="tracking-wide"></span>
           </a>
 
           <!-- Desktop nav -->
@@ -76,7 +95,6 @@
             <a class="hover:text-white" href="#testing">Testing</a>
             <a class="hover:text-white" href="#demo">Demo</a>
             <a class="hover:text-white" href="#team">Team</a>
-            <a class="hover:text-white" href="#downloads">Downloads</a>
           </nav>
 
           <!-- CTA (desktop) -->
@@ -84,7 +102,7 @@
             href="#downloads"
             class="no-print hidden md:inline-flex items-center gap-2 rounded-xl border border-white/10 bg-slate-900 px-4 py-2 font-semibold hover:bg-slate-800"
           >
-            ⬇️ Downloads
+            Downloads
           </a>
 
           <!-- Mobile menu button -->
@@ -192,9 +210,9 @@
             CMPT 2200 • Fall 2025 • Raspberry Pi GPIO + Python GUI
           </span>
           <h1 class="mt-3 text-3xl font-bold md:text-5xl">
-            Smart Plant Watering with Soil Moisture Sensor & Relay Pump
+            Smart Plant Watering with <br />Soil Moisture Sensor & Relay Pump
           </h1>
-          <p class="mt-2 max-w-3xl text-slate-300">
+          <p class="mt-4 max-w-3xl text-slate-300">
             Raspberry Pi reads soil moisture (GPIO
             <span class="text-indigo-300">IN</span>) and drives a mini-pump
             through a relay (GPIO <span class="text-indigo-300">OUT</span>).
@@ -203,7 +221,7 @@
           </p>
         </div>
 
-        <div class="grid gap-4 md:grid-cols-[1.2fr,0.8fr]">
+        <div class="grid gap-4 md:grid-cols-[1.2fr,0.8fr] mt-8">
           <div
             class="card rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-lg backdrop-blur"
           >
@@ -363,7 +381,7 @@
         <p class="mt-2 italic">High-level data flow:</p>
         <pre
           class="mt-2 rounded-xl border border-white/10 bg-slate-900 p-4 text-sm"
-        ><code>Soil Sensor (analog) → ADC (e.g., MCP3008) → Pi GPIO (SPI) → Python Logic →
+        ><code class="language-none">Soil Sensor (analog) → ADC (e.g., MCP3008) → Pi GPIO (SPI) → Python Logic →
                                                    ├─ Tkinter GUI (thresholds/logs)
                                                    └─ Relay (BCM 23) → Pump + 5V Supply
 
@@ -371,7 +389,7 @@ Optional: LED (BCM 24) for status, Buzzer (BCM 18) for alerts.</code></pre>
         <h3 class="mt-4 font-semibold">Control Logic (pseudo)</h3>
         <pre
           class="mt-2 rounded-xl border border-white/10 bg-slate-900 p-4 text-sm"
-        ><code>if moisture &lt; DRY_THRESHOLD and cooldown_elapsed:
+        ><code class="language-none">if moisture &lt; DRY_THRESHOLD and cooldown_elapsed:
   turn_pump_on for PUMP_SECONDS
 elif moisture &gt;= WET_THRESHOLD:
   ensure pump_off
@@ -504,7 +522,7 @@ log reading every SAMPLE_SECONDS; show in GUI chart/log</code></pre>
         <h3 class="mt-4 font-semibold">Starter Code (GPIO + Tkinter)</h3>
         <pre
           class="mt-2 rounded-xl border border-white/10 bg-slate-900 p-4 text-sm"
-        ><code># file: app.py
+        ><code class="language-python"># file: app.py
 # Minimal example: digital sensor + relay + Tkinter GUI
 import time, threading
 import RPi.GPIO as GPIO
@@ -582,7 +600,7 @@ if __name__ == "__main__":
         <h3 class="mt-4 font-semibold">Project Files</h3>
         <pre
           class="mt-2 rounded-xl border border-white/10 bg-slate-900 p-4 text-sm"
-        ><code>plant-watering/
+        ><code class="language-bash">plant-watering/
 ├─ app_digital.py        # For digital soil sensor modules (DO pin)
 ├─ app_analog.py         # For analog sensor via MCP3008
 ├─ mcp3008_helper.py     # SPI helper for MCP3008 reads
@@ -593,7 +611,7 @@ if __name__ == "__main__":
         <h3 class="mt-4 font-semibold">Install Commands (Pi)</h3>
         <pre
           class="mt-2 rounded-xl border border-white/10 bg-slate-900 p-4 text-sm"
-        ><code>sudo apt update && sudo apt full-upgrade -y
+        ><code class="language-bash">sudo apt update && sudo apt full-upgrade -y
 sudo apt install -y python3-pip python3-tk
 pip3 install RPi.GPIO spidev
 # If you prefer gpiozero instead of RPi.GPIO:
@@ -602,7 +620,7 @@ pip3 install RPi.GPIO spidev
         <h3 class="mt-4 font-semibold"><code>config.py</code></h3>
         <pre
           class="mt-2 rounded-xl border border-white/10 bg-slate-900 p-4 text-sm"
-        ><code># Pin map & tunables (BCM numbering)
+        ><code class="language-python"># Pin map & tunables (BCM numbering)
 BCM_RELAY = 23
 BCM_SENSOR_DIGITAL = 25  # digital DO pin if using module with comparator
 BCM_LED = 24             # optional status LED
@@ -625,7 +643,7 @@ RELAY_ACTIVE_LOW = True</code></pre>
         <h3 class="mt-4 font-semibold"><code>mcp3008_helper.py</code></h3>
         <pre
           class="mt-2 rounded-xl border border-white/10 bg-slate-900 p-4 text-sm"
-        ><code>import spidev
+        ><code class="language-python">import spidev
 
 class MCP3008:
     def __init__(self, bus=0, device=0):
@@ -651,7 +669,7 @@ class MCP3008:
         </h3>
         <pre
           class="mt-2 rounded-xl border border-white/10 bg-slate-900 p-4 text-sm"
-        ><code>import time, threading
+        ><code class="language-python">import time, threading
 import RPi.GPIO as GPIO
 import tkinter as tk
 import config
@@ -734,7 +752,7 @@ if __name__ == "__main__":
         </h3>
         <pre
           class="mt-2 rounded-xl border border-white/10 bg-slate-900 p-4 text-sm"
-        ><code>import time, threading
+        ><code class="language-python">import time, threading
 import RPi.GPIO as GPIO
 import tkinter as tk
 import config
@@ -819,7 +837,7 @@ if __name__ == "__main__":
         <h3 class="mt-4 font-semibold"><code>README.md</code> (snippet)</h3>
         <pre
           class="mt-2 rounded-xl border border-white/10 bg-slate-900 p-4 text-sm"
-        ><code># Plant Watering System (Raspberry Pi)
+        ><code class="language-markdown"># Plant Watering System (Raspberry Pi)
 
 ## Quick Start
 1. Enable SPI (if using MCP3008): `sudo raspi-config` → Interface → SPI → Enable
@@ -895,7 +913,7 @@ if __name__ == "__main__":
           <li>Trigger dry condition → pump runs for set seconds.</li>
           <li>Show stability: several cycles; safety + separate supply.</li>
           <li>
-            Q&A: limits, improvements (calibration, scheduling, alerts,
+            Q&amp;A: limits, improvements (calibration, scheduling, alerts,
             reservoir sensor).
           </li>
         </ol>
