@@ -39,7 +39,7 @@ Below is the wiring diagram for the system.
 
 > **⚠️ SAFETY WARNING:** Do not power the water pump directly from the Raspberry Pi's 5V pin. Motors draw high current and can damage your Pi. Use an external power source (like a battery pack) for the pump, connecting the **Grounds** together.
 
-![Wiring Diagram](assets/Circuit_Diagram.jpg)
+![Wiring Diagram](assets/Circuit_Diagram.png)
 
 ### Pin Mapping (BCM)
 
