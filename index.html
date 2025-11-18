@@ -1,1271 +1,229 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Plant Watering System – CMPT 2200 Term Project</title>
-    <meta
-      name="description"
-      content="Documentation site for a Raspberry Pi based plant watering system with soil moisture sensor and relay-controlled pump."
-    />
+    <title>PPWS | Pi Plant Watering System</title>
+    <meta name="description" content="Open source automated plant care system for Raspberry Pi." />
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      /* Minimal extras for code blocks, inline code & print */
-      pre {
-        overflow: auto;
-      }
-      code,
-      pre {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-          "Liberation Mono", "Courier New", monospace;
-      }
-      /* inline code (not inside pre) */
-      :not(pre) > code {
-        background: rgba(148, 163, 184, 0.14); /* slate-400/14 */
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        padding: 0.15rem 0.4rem;
-        border-radius: 0.4rem;
-        font-size: 0.95em;
-      }
-      @media print {
-        .no-print {
-          display: none !important;
-        }
-        body {
-          color: #000;
-          background: #fff;
-        }
-        .card {
-          border: 1px solid #d1d5db;
-          box-shadow: none !important;
-        }
-      }
-    </style>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
-    <!-- Prism.js syntax highlighting -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css"
-      rel="stylesheet"
-    />
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-markdown.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-yaml.min.js"></script>
+    <style>
+      body { font-family: 'Inter', sans-serif; }
+      code, pre { font-family: 'JetBrains Mono', monospace; }
+      
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar { width: 8px; }
+      ::-webkit-scrollbar-track { background: #0f172a; }
+      ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #475569; }
+      
+      /* Code Block Styling */
+      .code-window {
+        background: #1e293b;
+        border: 1px solid #334155;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      }
+      .token-comment { color: #64748b; font-style: italic; }
+      .token-function { color: #60a5fa; }
+      .token-keyword { color: #c084fc; }
+      .token-string { color: #4ade80; }
+    </style>
   </head>
-  <body class="bg-slate-950 text-slate-100">
-    <!-- Background layer (fixes gradient issue, independent of content) -->
-    <div aria-hidden="true" class="fixed inset-0 -z-10">
-      <div
-        class="absolute inset-0"
-        style="
-          background: radial-gradient(
-              1000px 500px at 85% -10%,
-              rgba(122, 162, 247, 0.12),
-              transparent 60%
-            ),
-            radial-gradient(
-              800px 400px at 10% 0%,
-              rgba(104, 211, 145, 0.1),
-              transparent 55%
-            ),
-            #0b0f14;
-        "
-      ></div>
+  
+  <body class="bg-slate-950 text-slate-200 antialiased selection:bg-emerald-500/30 selection:text-emerald-200">
+    
+    <div class="fixed inset-0 z-[-1]">
+      <div class="absolute top-0 left-1/4 h-96 w-96 rounded-full bg-emerald-500/20 blur-[128px]"></div>
+      <div class="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-indigo-500/10 blur-[128px]"></div>
     </div>
 
-    <!-- Header / Navbar -->
-    <header
-      class="sticky top-0 z-50 border-b border-white/10 bg-slate-950/70 backdrop-blur"
-    >
-      <div class="mx-auto max-w-6xl px-4">
-        <div class="flex h-16 items-center justify-between">
-          <a href="#overview" class="flex items-center gap-2 font-semibold">
-            <span class="text-2xl">🌿</span
-            ><span class="tracking-wide"></span>
-          </a>
-
-          <!-- Desktop nav -->
-          <nav class="hidden md:flex items-center gap-4 text-sm text-slate-300">
-            <a class="hover:text-white" href="#overview">Overview</a>
-            <a class="hover:text-white" href="#requirements">Requirements</a>
-            <a class="hover:text-white" href="#architecture">Architecture</a>
-            <a class="hover:text-white" href="#hardware">Hardware</a>
-            <a class="hover:text-white" href="#software">Software</a>
-            <a class="hover:text-white" href="#testing">Testing</a>
-            <a class="hover:text-white" href="#demo">Demo</a>
-            <a class="hover:text-white" href="#team">Team</a>
-          </nav>
-
-          <!-- CTA (desktop) -->
-          <a
-            href="#downloads"
-            class="no-print hidden md:inline-flex items-center gap-2 rounded-xl border border-white/10 bg-slate-900 px-4 py-2 font-semibold hover:bg-slate-800"
-          >
-            Downloads
-          </a>
-
-          <!-- Mobile menu button -->
-          <button
-            id="navToggle"
-            class="no-print md:hidden inline-flex items-center justify-center rounded-lg border border-white/10 bg-slate-900 p-2 hover:bg-slate-800"
-            aria-label="Open menu"
-            aria-expanded="false"
-          >
-            <svg
-              id="iconOpen"
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-width="1.5"
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-            <svg
-              id="iconClose"
-              xmlns="http://www.w3.org/2000/svg"
-              class="hidden h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-width="1.5"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+    <nav class="sticky top-0 z-50 border-b border-white/5 bg-slate-950/80 backdrop-blur-md">
+      <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div class="flex items-center gap-2">
+          <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20 text-xl">🌱</span>
+          <span class="font-bold tracking-tight text-white">PPWS</span>
         </div>
+        <div class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
+          <a href="#features" class="hover:text-white transition-colors">Features</a>
+          <a href="#hardware" class="hover:text-white transition-colors">Hardware</a>
+          <a href="#software" class="hover:text-white transition-colors">Software</a>
+          <a href="#references" class="hover:text-white transition-colors">References</a>
+        </div>
+        <a href="#download" class="group flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-sm font-medium text-white hover:bg-white/10 transition-all border border-white/5">
+          <span>Get Source</span>
+          <svg class="h-4 w-4 text-slate-400 group-hover:text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        </a>
+      </div>
+    </nav>
 
-        <!-- Mobile dropdown -->
-        <nav id="mobileNav" class="no-print md:hidden hidden pb-3">
-          <div
-            class="grid gap-2 rounded-xl border border-white/10 bg-slate-900/70 p-2"
-          >
-            <a
-              class="rounded-lg px-3 py-2 hover:bg-slate-800/70"
-              href="#overview"
-              >Overview</a
-            >
-            <a
-              class="rounded-lg px-3 py-2 hover:bg-slate-800/70"
-              href="#requirements"
-              >Requirements</a
-            >
-            <a
-              class="rounded-lg px-3 py-2 hover:bg-slate-800/70"
-              href="#architecture"
-              >Architecture</a
-            >
-            <a
-              class="rounded-lg px-3 py-2 hover:bg-slate-800/70"
-              href="#hardware"
-              >Hardware</a
-            >
-            <a
-              class="rounded-lg px-3 py-2 hover:bg-slate-800/70"
-              href="#software"
-              >Software</a
-            >
-            <a
-              class="rounded-lg px-3 py-2 hover:bg-slate-800/70"
-              href="#testing"
-              >Testing</a
-            >
-            <a class="rounded-lg px-3 py-2 hover:bg-slate-800/70" href="#demo"
-              >Demo</a
-            >
-            <a class="rounded-lg px-3 py-2 hover:bg-slate-800/70" href="#team"
-              >Team</a
-            >
-            <a
-              class="rounded-lg px-3 py-2 hover:bg-slate-800/70"
-              href="#downloads"
-              >Downloads</a
-            >
-            <a
-              class="rounded-lg px-3 py-2 border border-white/10 bg-slate-900 hover:bg-slate-800 text-center font-semibold"
-              href="#downloads"
-              >⬇️ Downloads</a
-            >
-          </div>
-        </nav>
+    <header class="relative mx-auto max-w-6xl px-6 py-24 text-center md:py-32">
+      <div class="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300 mb-6">
+        v1.0 Stable Release
+      </div>
+      <h1 class="text-5xl font-bold tracking-tight text-white md:text-7xl">
+        Smart Gardening <br />
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Made Simple.</span>
+      </h1>
+      <p class="mx-auto mt-6 max-w-2xl text-lg text-slate-400">
+        A Raspberry Pi powered system that monitors soil health, automates watering, and captures growth timelapses. Controlled via a modern Python touch interface.
+      </p>
+      <div class="mt-10 flex justify-center gap-4">
+        <a href="#hardware" class="rounded-full bg-white px-8 py-3 font-semibold text-slate-900 hover:bg-slate-200 transition">
+          Get Started
+        </a>
+        <a href="#download" class="rounded-full border border-white/10 bg-white/5 px-8 py-3 font-semibold text-white hover:bg-white/10 transition">
+          View Code
+        </a>
       </div>
     </header>
 
-    <!-- Main -->
-    <main class="mx-auto flex max-w-6xl flex-col gap-6 px-4">
-      <!-- OVERVIEW -->
-      <section id="overview" class="scroll-mt-24">
-        <div class="pt-8">
-          <span
-            class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-slate-900/60 px-3 py-1 text-xs text-slate-300"
-          >
-            CMPT 2200 • Fall 2025 • Raspberry Pi GPIO + Python GUI
-          </span>
-          <h1 class="mt-3 text-3xl font-bold md:text-5xl">
-            Smart Plant Watering with <br />Soil Moisture Sensor & Relay Pump
-          </h1>
-          <p class="mt-4 max-w-3xl text-slate-300">
-            Raspberry Pi reads soil moisture (GPIO
-            <span class="text-indigo-300">IN</span>) and drives a mini-pump
-            through a relay (GPIO <span class="text-indigo-300">OUT</span>).
-            Tkinter GUI lets users calibrate thresholds, view live moisture and
-            logs, and toggle manual watering.
-          </p>
+    <section id="features" class="border-y border-white/5 bg-white/[0.02]">
+      <div class="mx-auto max-w-6xl px-6 py-20">
+        <div class="grid gap-8 md:grid-cols-3">
+          <div class="group rounded-2xl border border-white/5 bg-slate-900 p-8 hover:border-emerald-500/30 transition">
+            <div class="mb-4 inline-block rounded-lg bg-emerald-500/20 p-3 text-2xl text-emerald-400 group-hover:scale-110 transition-transform">💧</div>
+            <h3 class="mb-2 text-xl font-semibold text-white">Auto-Watering</h3>
+            <p class="text-slate-400">Intelligent soil analysis via GPIO sensors triggers the relay-pump system only when necessary.</p>
+          </div>
+          <div class="group rounded-2xl border border-white/5 bg-slate-900 p-8 hover:border-indigo-500/30 transition">
+            <div class="mb-4 inline-block rounded-lg bg-indigo-500/20 p-3 text-2xl text-indigo-400 group-hover:scale-110 transition-transform">📷</div>
+            <h3 class="mb-2 text-xl font-semibold text-white">Timelapse Engine</h3>
+            <p class="text-slate-400">Capture plant growth over days or weeks. Automatically renders frames into shareable videos.</p>
+          </div>
+          <div class="group rounded-2xl border border-white/5 bg-slate-900 p-8 hover:border-amber-500/30 transition">
+            <div class="mb-4 inline-block rounded-lg bg-amber-500/20 p-3 text-2xl text-amber-400 group-hover:scale-110 transition-transform">🖥️</div>
+            <h3 class="mb-2 text-xl font-semibold text-white">Touch GUI</h3>
+            <p class="text-slate-400">Built with Python Tkinter. Features a dark mode interface optimized for Raspberry Pi touchscreens.</p>
+          </div>
         </div>
+      </div>
+    </section>
 
-        <div class="grid gap-4 md:grid-cols-[1.2fr,0.8fr] mt-8">
-          <div
-            class="card rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-lg backdrop-blur"
-          >
-            <h3 class="text-lg font-semibold">Project Snapshot</h3>
-            <ul class="mt-2 list-disc space-y-1 pl-5">
-              <li>
-                <strong>Goal:</strong> Keep plant soil within a healthy moisture
-                range automatically.
-              </li>
-              <li>
-                <strong>Inputs:</strong> Soil moisture sensor (digital or via
-                ADC → GPIO), GUI controls.
-              </li>
-              <li>
-                <strong>Outputs:</strong> Relay-driven pump/valve, status
-                LED/buzzer.
-              </li>
-              <li><strong>Language:</strong> Python 3 + Tkinter.</li>
-              <li><strong>Device:</strong> Raspberry Pi 4 (GPIO).</li>
-            </ul>
-
-            <div class="mt-4 grid grid-cols-3 gap-2">
-              <div
-                class="rounded-xl border border-white/10 bg-slate-900/50 p-3 text-center"
-              >
-                <div class="text-lg font-bold">Oct 31</div>
-                <div class="text-xs text-slate-400">Design Proposal</div>
+    <main class="mx-auto max-w-6xl px-6 py-20">
+      
+      <div id="hardware" class="grid gap-16 lg:grid-cols-2 items-start">
+        <div>
+          <h2 class="text-3xl font-bold text-white">Hardware Setup</h2>
+          <p class="mt-4 text-slate-400">The system is designed for the Raspberry Pi 4 Model B. It utilizes standard GPIO pins for digital I/O.</p>
+          
+          <div class="mt-8 space-y-4">
+            <div class="flex items-start gap-4 rounded-xl border border-white/5 bg-slate-900/50 p-4">
+              <div class="h-2 w-2 mt-2 rounded-full bg-emerald-400"></div>
+              <div>
+                <h4 class="font-semibold text-white">Moisture Sensor (GPIO 16)</h4>
+                <p class="text-sm text-slate-400">Digital input. Sends HIGH signal when soil is dry.</p>
               </div>
-              <div
-                class="rounded-xl border border-white/10 bg-slate-900/50 p-3 text-center"
-              >
-                <div class="text-lg font-bold">Nov 21</div>
-                <div class="text-xs text-slate-400">In-Class Demo</div>
+            </div>
+            <div class="flex items-start gap-4 rounded-xl border border-white/5 bg-slate-900/50 p-4">
+              <div class="h-2 w-2 mt-2 rounded-full bg-red-400"></div>
+              <div>
+                <h4 class="font-semibold text-white">5V Relay & Pump (GPIO 20)</h4>
+                <p class="text-sm text-slate-400">Active LOW logic. Controls external 5V power to the pump.</p>
               </div>
-              <div
-                class="rounded-xl border border-white/10 bg-slate-900/50 p-3 text-center"
-              >
-                <div class="text-lg font-bold">Nov 28</div>
-                <div class="text-xs text-slate-400">Bonus Report</div>
+            </div>
+            <div class="flex items-start gap-4 rounded-xl border border-white/5 bg-slate-900/50 p-4">
+              <div class="h-2 w-2 mt-2 rounded-full bg-blue-400"></div>
+              <div>
+                <h4 class="font-semibold text-white">Status LEDs (GPIO 5, 6, 13)</h4>
+                <p class="text-sm text-slate-400">Visual feedback for system status and active recording.</p>
               </div>
             </div>
           </div>
-
-          <aside
-            class="card rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-lg backdrop-blur"
-          >
-            <h3 class="text-lg font-semibold">Contents</h3>
-            <nav class="mt-2 grid gap-2">
-              <a
-                class="rounded-xl border border-white/10 bg-slate-900/50 px-3 py-2 hover:bg-slate-800/60"
-                href="#requirements"
-                >Course Requirements</a
-              >
-              <a
-                class="rounded-xl border border-white/10 bg-slate-900/50 px-3 py-2 hover:bg-slate-800/60"
-                href="#architecture"
-                >System Architecture</a
-              >
-              <a
-                class="rounded-xl border border-white/10 bg-slate-900/50 px-3 py-2 hover:bg-slate-800/60"
-                href="#hardware"
-                >Hardware & Wiring</a
-              >
-              <a
-                class="rounded-xl border border-white/10 bg-slate-900/50 px-3 py-2 hover:bg-slate-800/60"
-                href="#software"
-                >Software & GUI</a
-              >
-              <a
-                class="rounded-xl border border-white/10 bg-slate-900/50 px-3 py-2 hover:bg-slate-800/60"
-                href="#testing"
-                >Testing & Stability</a
-              >
-              <a
-                class="rounded-xl border border-white/10 bg-slate-900/50 px-3 py-2 hover:bg-slate-800/60"
-                href="#demo"
-                >Demo Script</a
-              >
-              <a
-                class="rounded-xl border border-white/10 bg-slate-900/50 px-3 py-2 hover:bg-slate-800/60"
-                href="#timeline"
-                >Timeline</a
-              >
-              <a
-                class="rounded-xl border border-white/10 bg-slate-900/50 px-3 py-2 hover:bg-slate-800/60"
-                href="#team"
-                >Team & Work Split</a
-              >
-              <a
-                class="rounded-xl border border-white/10 bg-slate-900/50 px-3 py-2 hover:bg-slate-800/60"
-                href="#bom"
-                >BOM</a
-              >
-              <a
-                class="rounded-xl border border-white/10 bg-slate-900/50 px-3 py-2 hover:bg-slate-800/60"
-                href="#references"
-                >References</a
-              >
-              <a
-                class="rounded-xl border border-white/10 bg-slate-900/50 px-3 py-2 hover:bg-slate-800/60"
-                href="#downloads"
-                >Downloads</a
-              >
-            </nav>
-          </aside>
-        </div>
-      </section>
-
-      <!-- REQUIREMENTS -->
-      <section
-        id="requirements"
-        class="scroll-mt-24 rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-lg backdrop-blur"
-      >
-        <h2 class="text-xl font-semibold">Course Requirements (Checklist)</h2>
-        <ul class="mt-2 list-disc space-y-1 pl-5">
-          <li>
-            Uses <strong>Raspberry Pi model</strong> provided in lab.
-            <span
-              class="ml-2 rounded-full border border-emerald-500/30 px-2 py-0.5 text-xs text-emerald-400"
-              >Included</span
-            >
-          </li>
-          <li>
-            Includes <strong>GPIO Input</strong> (soil sensor / button).
-            <span
-              class="ml-2 rounded-full border border-emerald-500/30 px-2 py-0.5 text-xs text-emerald-400"
-              >Included</span
-            >
-          </li>
-          <li>
-            Includes <strong>GPIO Output</strong> (relay → pump, LED/buzzer).
-            <span
-              class="ml-2 rounded-full border border-emerald-500/30 px-2 py-0.5 text-xs text-emerald-400"
-              >Included</span
-            >
-          </li>
-          <li>
-            <strong>GUI</strong> (Tkinter) instead of pure CLI.
-            <span
-              class="ml-2 rounded-full border border-emerald-500/30 px-2 py-0.5 text-xs text-emerald-400"
-              >Included</span
-            >
-          </li>
-          <li>
-            Creativity, difficulty, stability & consistency evaluated — see
-            Testing.
-          </li>
-        </ul>
-      </section>
-
-      <!-- ARCHITECTURE -->
-      <section
-        id="architecture"
-        class="scroll-mt-24 rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-lg backdrop-blur"
-      >
-        <h2 class="text-xl font-semibold">System Architecture</h2>
-        <p class="mt-2 italic">High-level data flow:</p>
-        <pre
-          class="mt-2 rounded-xl border border-white/10 bg-slate-900 p-4 text-sm"
-        ><code class="language-none">Soil Sensor (analog) → ADC (e.g., MCP3008) → Pi GPIO (SPI) → Python Logic →
-                                                   ├─ Tkinter GUI (thresholds/logs)
-                                                   └─ Relay (BCM 23) → Pump + 5V Supply
-
-Optional: LED (BCM 24) for status, Buzzer (BCM 18) for alerts.</code></pre>
-        <h3 class="mt-4 font-semibold">Control Logic (pseudo)</h3>
-        <pre
-          class="mt-2 rounded-xl border border-white/10 bg-slate-900 p-4 text-sm"
-        ><code class="language-none">if moisture &lt; DRY_THRESHOLD and cooldown_elapsed:
-  turn_pump_on for PUMP_SECONDS
-elif moisture &gt;= WET_THRESHOLD:
-  ensure pump_off
-log reading every SAMPLE_SECONDS; show in GUI chart/log</code></pre>
-      </section>
-
-      <!-- HARDWARE -->
-      <section
-        id="hardware"
-        class="scroll-mt-24 rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-lg backdrop-blur"
-      >
-        <h2 class="text-xl font-semibold">Hardware & Wiring</h2>
-        <div class="mt-2 overflow-x-auto">
-          <table class="w-full table-auto text-sm">
-            <thead class="text-left text-slate-300">
-              <tr>
-                <th class="py-2">Part</th>
-                <th>Qty</th>
-                <th>Notes</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-white/10">
-              <tr>
-                <td class="py-2">Raspberry Pi 4</td>
-                <td>1</td>
-                <td>BCM GPIO numbering.</td>
-              </tr>
-              <tr>
-                <td class="py-2">Soil Moisture Sensor</td>
-                <td>1</td>
-                <td>
-                  Digital (DO) <em>or</em> analog via ADC (e.g., MCP3008).
-                </td>
-              </tr>
-              <tr>
-                <td class="py-2">MCP3008 (optional)</td>
-                <td>1</td>
-                <td>10-bit analog readings over SPI.</td>
-              </tr>
-              <tr>
-                <td class="py-2">Relay Module (5V)</td>
-                <td>1</td>
-                <td>IN → Pi GPIO (use optocoupled module).</td>
-              </tr>
-              <tr>
-                <td class="py-2">Mini Water Pump + Tubing</td>
-                <td>1</td>
-                <td>Separate 5V supply rated for pump.</td>
-              </tr>
-              <tr>
-                <td class="py-2">LED + Buzzer (optional)</td>
-                <td>—</td>
-                <td>Status/alerts.</td>
-              </tr>
-              <tr>
-                <td class="py-2">External 5V Supply</td>
-                <td>1</td>
-                <td><strong>Do not</strong> draw pump current from Pi 5V.</td>
-              </tr>
-            </tbody>
-          </table>
+          
+          <div class="mt-6 rounded-lg border border-amber-500/20 bg-amber-500/10 p-4 text-amber-200 text-sm">
+            <strong>⚡ Power Safety:</strong> Never power the pump directly from the Raspberry Pi 5V pin. Use an external power supply and a common ground.
+          </div>
         </div>
 
-        <h3 class="mt-4 font-semibold">GPIO Map (suggested)</h3>
-        <div class="mt-2 overflow-x-auto">
-          <table class="w-full table-auto text-sm">
-            <thead class="text-left text-slate-300">
-              <tr>
-                <th class="py-2">Signal</th>
-                <th>BCM Pin</th>
-                <th>Header Pin</th>
-                <th>Dir</th>
-                <th>Notes</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-white/10">
-              <tr>
-                <td class="py-2">Relay IN</td>
-                <td>23</td>
-                <td>Pin 16</td>
-                <td>OUT</td>
-                <td>Active LOW/High depends on module.</td>
-              </tr>
-              <tr>
-                <td class="py-2">Status LED</td>
-                <td>24</td>
-                <td>Pin 18</td>
-                <td>OUT</td>
-                <td>Series resistor (330–1kΩ) recommended.</td>
-              </tr>
-              <tr>
-                <td class="py-2">Buzzer (PWM)</td>
-                <td>18</td>
-                <td>Pin 12</td>
-                <td>OUT</td>
-                <td>Optional.</td>
-              </tr>
-              <tr>
-                <td class="py-2">Sensor DO</td>
-                <td>25</td>
-                <td>Pin 22</td>
-                <td>IN</td>
-                <td>Digital; if analog, use SPI pins via MCP3008.</td>
-              </tr>
-              <tr>
-                <td class="py-2">GND</td>
-                <td>—</td>
-                <td>Any GND</td>
-                <td>—</td>
-                <td>Common ground between Pi, relay logic, and sensor.</td>
-              </tr>
-            </tbody>
-          </table>
+        <div id="software" class="sticky top-24">
+          <div class="code-window rounded-lg overflow-hidden">
+            <div class="flex items-center gap-2 border-b border-slate-700 bg-slate-800 px-4 py-2">
+              <div class="h-3 w-3 rounded-full bg-red-500"></div>
+              <div class="h-3 w-3 rounded-full bg-yellow-500"></div>
+              <div class="h-3 w-3 rounded-full bg-green-500"></div>
+              <span class="ml-2 text-xs text-slate-400 font-mono">main.py</span>
+            </div>
+            <div class="p-4 overflow-x-auto">
+<pre><code class="text-sm"><span class="token-keyword">def</span> <span class="token-function">auto_watering_loop</span>():
+    isDry = <span class="token-keyword">False</span>
+    <span class="token-function">print</span>(<span class="token-string">"Auto-Watering is starting..."</span>)
+    
+    <span class="token-keyword">while not</span> stop_watering.is_set():
+        <span class="token-comment"># Check Digital Sensor</span>
+        <span class="token-keyword">if</span> GPIO.<span class="token-function">input</span>(SENSOR_PIN) == GPIO.HIGH:
+            isDry = <span class="token-keyword">True</span>
+        
+        <span class="token-keyword">if</span> isDry:
+            <span class="token-function">print</span>(<span class="token-string">"Watering plant..."</span>)
+            GPIO.<span class="token-function">output</span>(PUMP_PIN, GPIO.LOW)
+            <span class="token-function">sleep</span>(1)
+            GPIO.<span class="token-function">output</span>(PUMP_PIN, GPIO.HIGH)
+            
+        <span class="token-function">sleep</span>(WATERING_INTERVAL)</code></pre>
+            </div>
+          </div>
+          <p class="mt-4 text-center text-sm text-slate-500">Core logic for the automated loop.</p>
+        </div>
+      </div>
+
+      <section id="download" class="mt-24 rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 border border-white/10 p-12 text-center">
+        <h2 class="text-3xl font-bold text-white">Ready to build?</h2>
+        <p class="mt-4 text-slate-400">Download the complete source code, including the Tkinter GUI, Timelapse helper, and installation script.</p>
+        
+        <div class="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+          <a href="https://github.com/YOUR_USERNAME/PPWS" target="_blank" class="flex items-center gap-3 rounded-lg bg-white px-6 py-3 font-bold text-slate-900 hover:bg-emerald-400 hover:text-slate-900 transition-colors">
+            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            View on GitHub
+          </a>
+          <a href="#" class="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-6 py-3 font-bold text-white hover:bg-white/10 transition-colors">
+            Download .ZIP
+          </a>
         </div>
       </section>
-
-      <!-- SOFTWARE -->
-      <section
-        id="software"
-        class="scroll-mt-24 rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-lg backdrop-blur"
-      >
-        <h2 class="text-xl font-semibold">Software & GUI</h2>
-        <h3 class="mt-2 font-semibold">Python Packages</h3>
-        <ul class="mt-1 list-disc space-y-1 pl-5">
-          <li><code>RPi.GPIO</code> or <code>gpiozero</code></li>
-          <li><code>tkinter</code> (built-in)</li>
-          <li><code>spidev</code> (if using MCP3008)</li>
-        </ul>
-
-        <h3 class="mt-4 font-semibold">Starter Code (GPIO + Tkinter)</h3>
-        <pre
-          class="mt-2 rounded-xl border border-white/10 bg-slate-900 p-4 text-sm"
-        ><code class="language-python"># file: app.py
-# Minimal example: digital sensor + relay + Tkinter GUI
-import time, threading
-import RPi.GPIO as GPIO
-import tkinter as tk
-
-BCM_RELAY = 23
-BCM_SENSOR = 25  # digital output from sensor module
-PUMP_SECONDS = 3
-SAMPLE_SECONDS = 2
-
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(BCM_RELAY, GPIO.OUT, initial=GPIO.HIGH)  # HIGH=off on many modules
-GPIO.setup(BCM_SENSOR, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-
-class App:
-    def __init__(self, root):
-        self.root = root
-        root.title("Plant Watering System")
-        self.moisture_label = tk.Label(root, text="Moisture: —", font=("Segoe UI", 16))
-        self.moisture_label.pack(pady=8)
-        self.threshold = tk.IntVar(value=0)  # 0=dry on digital sensors
-        tk.Button(root, text="Manual Water", command=self.water_now).pack(pady=4)
-        self.log = tk.Text(root, height=8, width=48)
-        self.log.pack(pady=8)
-        self.running = True
-        threading.Thread(target=self.loop, daemon=True).start()
-
-    def read_moisture(self):
-        # Digital sensors: 0=dry, 1=wet (often)
-        val = GPIO.input(BCM_SENSOR)
-        return val
-
-    def set_pump(self, on):
-        # Many relay boards are active LOW
-        GPIO.output(BCM_RELAY, GPIO.LOW if on else GPIO.HIGH)
-
-    def water_now(self):
-        self.append("Manual watering…")
-        self.set_pump(True); time.sleep(PUMP_SECONDS); self.set_pump(False)
-        self.append("Pump off.")
-
-    def append(self, msg):
-        self.log.insert(tk.END, time.strftime("[%H:%M:%S] ") + msg + "\\n")
-        self.log.see(tk.END)
-
-    def loop(self):
-        while self.running:
-            m = self.read_moisture()
-            self.root.after(0, self.moisture_label.config, {"text": f"Moisture: {'WET' if m else 'DRY'} ({m})"})
-            if m == self.threshold.get():
-                self.append("Soil dry → watering")
-                self.set_pump(True); time.sleep(PUMP_SECONDS); self.set_pump(False)
-                self.append("Pump off.")
-            time.sleep(SAMPLE_SECONDS)
-
-    def close(self):
-        self.running = False
-        self.set_pump(False)
-        GPIO.cleanup()
-
-if __name__ == "__main__":
-    try:
-        root = tk.Tk(); app = App(root)
-        root.protocol("WM_DELETE_WINDOW", lambda: (app.close(), root.destroy()))
-        root.mainloop()
-    finally:
-        GPIO.cleanup()</code></pre>
-
-        <p class="mt-2 text-slate-300">
-          <em>Tip:</em> If your sensor is analog-only, replace
-          <code>read_moisture()</code> with an MCP3008 SPI read and compare to a
-          threshold slider in the GUI.
-        </p>
-
-        <h3 class="mt-4 font-semibold">Project Files</h3>
-        <pre
-          class="mt-2 rounded-xl border border-white/10 bg-slate-900 p-4 text-sm"
-        ><code class="language-bash">plant-watering/
-├─ app_digital.py        # For digital soil sensor modules (DO pin)
-├─ app_analog.py         # For analog sensor via MCP3008
-├─ mcp3008_helper.py     # SPI helper for MCP3008 reads
-├─ config.py             # Pin map & tunables in one place
-├─ requirements.txt      # Python deps (RPi.GPIO, spidev)
-└─ README.md             # How to run + safety notes</code></pre>
-
-        <h3 class="mt-4 font-semibold">Install Commands (Pi)</h3>
-        <pre
-          class="mt-2 rounded-xl border border-white/10 bg-slate-900 p-4 text-sm"
-        ><code class="language-bash">sudo apt update && sudo apt full-upgrade -y
-sudo apt install -y python3-pip python3-tk
-pip3 install RPi.GPIO spidev
-# If you prefer gpiozero instead of RPi.GPIO:
-#   pip3 install gpiozero</code></pre>
-
-        <h3 class="mt-4 font-semibold"><code>config.py</code></h3>
-        <pre
-          class="mt-2 rounded-xl border border-white/10 bg-slate-900 p-4 text-sm"
-        ><code class="language-python"># Pin map & tunables (BCM numbering)
-BCM_RELAY = 23
-BCM_SENSOR_DIGITAL = 25  # digital DO pin if using module with comparator
-BCM_LED = 24             # optional status LED
-
-# Control parameters
-PUMP_SECONDS = 4         # pump ON time per cycle
-SAMPLE_SECONDS = 2       # read interval
-COOLDOWN_SECONDS = 600   # min gap between auto-watering cycles
-
-# For analog mode (MCP3008)
-SPI_BUS = 0
-SPI_DEVICE = 0
-MCP3008_CHANNEL = 0      # CH0
-DRY_THRESHOLD = 450      # tune by calibration (0..1023)
-WET_THRESHOLD = 700      # if using hysteresis
-
-# Relay logic (many boards are active LOW)
-RELAY_ACTIVE_LOW = True</code></pre>
-
-        <h3 class="mt-4 font-semibold"><code>mcp3008_helper.py</code></h3>
-        <pre
-          class="mt-2 rounded-xl border border-white/10 bg-slate-900 p-4 text-sm"
-        ><code class="language-python">import spidev
-
-class MCP3008:
-    def __init__(self, bus=0, device=0):
-        self.spi = spidev.SpiDev()
-        self.spi.open(bus, device)
-        self.spi.max_speed_hz = 1350000
-
-    def read(self, channel=0):
-        assert 0 <= channel <= 7
-        # SPI transaction: start bit, single-ended, channel bits
-        r = self.spi.xfer2([1, (8 + channel) << 4, 0])
-        value = ((r[1] & 3) << 8) | r[2]
-        return value
-
-    def close(self):
-        try:
-            self.spi.close()
-        except Exception:
-            pass</code></pre>
-
-        <h3 class="mt-4 font-semibold">
-          <code>app_digital.py</code> (GUI for digital sensor)
-        </h3>
-        <pre
-          class="mt-2 rounded-xl border border-white/10 bg-slate-900 p-4 text-sm"
-        ><code class="language-python">import time, threading
-import RPi.GPIO as GPIO
-import tkinter as tk
-import config
-
-GPIO.setmode(GPIO.BCM)
-
-# Setup pins
-GPIO.setup(config.BCM_RELAY, GPIO.OUT, initial=GPIO.HIGH if config.RELAY_ACTIVE_LOW else GPIO.LOW)
-GPIO.setup(config.BCM_SENSOR_DIGITAL, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-try:
-    GPIO.setup(config.BCM_LED, GPIO.OUT)
-except Exception:
-    pass
-
-last_auto = 0
-
-def relay(on: bool):
-    # active LOW handling
-    level = GPIO.LOW if (on == config.RELAY_ACTIVE_LOW) else GPIO.HIGH
-    GPIO.output(config.BCM_RELAY, level)
-    try:
-        GPIO.output(config.BCM_LED, GPIO.HIGH if on else GPIO.LOW)
-    except Exception:
-        pass
-
-class App:
-    def __init__(self, root):
-        self.root = root
-        root.title("Plant Watering – Digital")
-        self.state = tk.StringVar(value="—")
-        self.cooldown = config.COOLDOWN_SECONDS
-        self.running = True
-
-        tk.Label(root, textvariable=self.state, font=("Segoe UI", 18)).pack(pady=6)
-        tk.Button(root, text="Water Now", command=self.water_now).pack(pady=4)
-        self.log = tk.Text(root, height=10, width=56); self.log.pack(pady=8)
-
-        threading.Thread(target=self.loop, daemon=True).start()
-
-    def logmsg(self, s):
-        self.log.insert(tk.END, time.strftime("[%H:%M:%S] ") + s + "\\n"); self.log.see(tk.END)
-
-    def read_digital(self):
-        # typical modules: 0=dry, 1=wet (verify yours!)
-        return GPIO.input(config.BCM_SENSOR_DIGITAL)
-
-    def water_now(self):
-        self.logmsg("Manual watering…")
-        relay(True); time.sleep(config.PUMP_SECONDS); relay(False)
-        self.logmsg("Pump off.")
-
-    def loop(self):
-        global last_auto
-        while self.running:
-            wet = self.read_digital()  # 1=wet, 0=dry (common)
-            self.root.after(0, self.state.set, f"Moisture: {'WET' if wet else 'DRY'} ({wet})")
-            now = time.time()
-            if (not wet) and (now - last_auto >= self.cooldown):
-                self.logmsg("Auto: DRY detected → watering")
-                relay(True); time.sleep(config.PUMP_SECONDS); relay(False)
-                last_auto = now
-                self.logmsg("Auto: done")
-            time.sleep(config.SAMPLE_SECONDS)
-
-    def close(self):
-        self.running = False
-        relay(False)
-        GPIO.cleanup()
-
-if __name__ == "__main__":
-    try:
-        root = tk.Tk(); app = App(root)
-        root.protocol("WM_DELETE_WINDOW", lambda: (app.close(), root.destroy()))
-        root.mainloop()
-    finally:
-        GPIO.cleanup()</code></pre>
-
-        <h3 class="mt-4 font-semibold">
-          <code>app_analog.py</code> (GUI for MCP3008 analog)
-        </h3>
-        <pre
-          class="mt-2 rounded-xl border border-white/10 bg-slate-900 p-4 text-sm"
-        ><code class="language-python">import time, threading
-import RPi.GPIO as GPIO
-import tkinter as tk
-import config
-from mcp3008_helper import MCP3008
-
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(config.BCM_RELAY, GPIO.OUT, initial=GPIO.HIGH if config.RELAY_ACTIVE_LOW else GPIO.LOW)
-try:
-    GPIO.setup(config.BCM_LED, GPIO.OUT)
-except Exception:
-    pass
-
-adc = MCP3008(config.SPI_BUS, config.SPI_DEVICE)
-last_auto = 0
-
-def relay(on: bool):
-    level = GPIO.LOW if (on == config.RELAY_ACTIVE_LOW) else GPIO.HIGH
-    GPIO.output(config.BCM_RELAY, level)
-    try:
-        GPIO.output(config.BCM_LED, GPIO.HIGH if on else GPIO.LOW)
-    except Exception:
-        pass
-
-class App:
-    def __init__(self, root):
-        self.root = root
-        root.title("Plant Watering – Analog (MCP3008)")
-        self.value = tk.IntVar(value=0)
-        self.thresh = tk.IntVar(value=config.DRY_THRESHOLD)
-        self.running = True
-
-        row = tk.Frame(root); row.pack(pady=6)
-        tk.Label(row, text="Moisture:").pack(side=tk.LEFT)
-        tk.Label(row, textvariable=self.value, font=("Segoe UI", 16)).pack(side=tk.LEFT, padx=8)
-
-        tk.Scale(root, from_=0, to=1023, orient=tk.HORIZONTAL, variable=self.thresh,
-                 label="Dry Threshold", length=320).pack(padx=10, pady=6)
-        tk.Button(root, text="Water Now", command=self.water_now).pack(pady=4)
-        self.log = tk.Text(root, height=10, width=56); self.log.pack(pady=8)
-
-        threading.Thread(target=self.loop, daemon=True).start()
-
-    def logmsg(self, s):
-        self.log.insert(tk.END, time.strftime("[%H:%M:%S] ") + s + "\\n"); self.log.see(tk.END)
-
-    def read_value(self):
-        return adc.read(config.MCP3008_CHANNEL)
-
-    def water_now(self):
-        self.logmsg("Manual watering…")
-        relay(True); time.sleep(config.PUMP_SECONDS); relay(False)
-        self.logmsg("Pump off.")
-
-    def loop(self):
-        global last_auto
-        while self.running:
-            v = self.read_value()
-            self.root.after(0, self.value.set, v)
-            now = time.time()
-            if v &lt; self.thresh.get() and (now - last_auto >= config.COOLDOWN_SECONDS):
-                self.logmsg(f"Auto: value={v} &lt; threshold → watering")
-                relay(True); time.sleep(config.PUMP_SECONDS); relay(False)
-                last_auto = now
-                self.logmsg("Auto: done")
-            time.sleep(config.SAMPLE_SECONDS)
-
-    def close(self):
-        self.running = False
-        relay(False)
-        try: adc.close()
-        except Exception: pass
-        GPIO.cleanup()
-
-if __name__ == "__main__":
-    try:
-        root = tk.Tk(); app = App(root)
-        root.protocol("WM_DELETE_WINDOW", lambda: (app.close(), root.destroy()))
-        root.mainloop()
-    finally:
-        GPIO.cleanup()</code></pre>
-
-        <h3 class="mt-4 font-semibold"><code>README.md</code> (snippet)</h3>
-        <pre
-          class="mt-2 rounded-xl border border-white/10 bg-slate-900 p-4 text-sm"
-        ><code class="language-markdown"># Plant Watering System (Raspberry Pi)
-
-## Quick Start
-1. Enable SPI (if using MCP3008): `sudo raspi-config` → Interface → SPI → Enable
-2. Install deps: `sudo apt install -y python3-tk && pip3 install RPi.GPIO spidev`
-3. Wire relay, sensor, and common ground; use separate 5V for pump.
-4. Digital sensor: `python3 app_digital.py`  •  Analog+MCP3008: `python3 app_analog.py`
-
-## Safety
-- Separate pump supply; never power motor from Pi 5V
-- Common ground between Pi, relay logic, sensor, pump supply
-- Max ON time + cooldown in `config.py`</code></pre>
-      </section>
-
-      <!-- TESTING -->
-      <section
-        id="testing"
-        class="scroll-mt-24 rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-lg backdrop-blur"
-      >
-        <h2 class="text-xl font-semibold">Testing, Stability & Logs</h2>
-        <ul class="mt-2 list-disc space-y-1 pl-5">
-          <li>
-            GPIO directions, relay logic (active LOW/HIGH), sensor polarity.
-          </li>
-          <li>
-            Stress: 50+ on/off cycles; ensure pump supply doesn’t brown-out the
-            Pi.
-          </li>
-          <li>
-            Safety: separate 5V pump supply; common ground; optional flyback if
-            transistor driving.
-          </li>
-          <li>GUI: threshold updates, manual override, log scroll.</li>
-        </ul>
-
-        <h3 class="mt-3 font-semibold">Test Log</h3>
-        <div class="mt-2 overflow-x-auto">
-          <table class="w-full table-auto text-sm">
-            <thead class="text-left text-slate-300">
-              <tr>
-                <th class="py-2">Date</th>
-                <th>Case</th>
-                <th>Result</th>
-                <th>Notes</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-white/10">
-              <tr>
-                <td class="py-2">YYYY-MM-DD</td>
-                <td>Dry soil triggers pump</td>
-                <td>✅ Pass</td>
-                <td>—</td>
-              </tr>
-              <tr>
-                <td class="py-2">YYYY-MM-DD</td>
-                <td>Wet soil prevents pump</td>
-                <td>✅ Pass</td>
-                <td>—</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- DEMO -->
-      <section
-        id="demo"
-        class="scroll-mt-24 rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-lg backdrop-blur"
-      >
-        <h2 class="text-xl font-semibold">Demo Script (≈ 3–4 min)</h2>
-        <ol class="mt-2 list-decimal space-y-1 pl-5">
-          <li>Intro: Goal & requirements; show wiring diagram.</li>
-          <li>Run GUI: live moisture; show manual water.</li>
-          <li>Trigger dry condition → pump runs for set seconds.</li>
-          <li>Show stability: several cycles; safety + separate supply.</li>
-          <li>
-            Q&amp;A: limits, improvements (calibration, scheduling, alerts,
-            reservoir sensor).
-          </li>
-        </ol>
-      </section>
-
-      <!-- TIMELINE -->
-      <section
-        id="timeline"
-        class="scroll-mt-24 rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-lg backdrop-blur"
-      >
-        <h2 class="text-xl font-semibold">Timeline</h2>
-        <div class="mt-2 overflow-x-auto">
-          <table class="w-full table-auto text-sm">
-            <thead class="text-left text-slate-300">
-              <tr>
-                <th class="py-2">Week</th>
-                <th>Tasks</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-white/10">
-              <tr>
-                <td class="py-2">By Oct 31</td>
-                <td>Design proposal, wiring draft, starter GUI</td>
-                <td>
-                  <span
-                    class="rounded-full border border-white/20 px-2 py-0.5 text-xs"
-                    >Planned</span
-                  >
-                </td>
-              </tr>
-              <tr>
-                <td class="py-2">Nov 1–14</td>
-                <td>Build, test, iterate; add logs/LED/buzzer</td>
-                <td>
-                  <span
-                    class="rounded-full border border-white/20 px-2 py-0.5 text-xs"
-                    >Planned</span
-                  >
-                </td>
-              </tr>
-              <tr>
-                <td class="py-2">Nov 15–20</td>
-                <td>Polish GUI; rehearse demo; prepare ZIP</td>
-                <td>
-                  <span
-                    class="rounded-full border border-white/20 px-2 py-0.5 text-xs"
-                    >Planned</span
-                  >
-                </td>
-              </tr>
-              <tr>
-                <td class="py-2">Nov 21</td>
-                <td><strong>In-class demonstration</strong></td>
-                <td>
-                  <span
-                    class="rounded-full border border-emerald-500/30 px-2 py-0.5 text-xs text-emerald-400"
-                    >Target</span
-                  >
-                </td>
-              </tr>
-              <tr>
-                <td class="py-2">By Nov 27</td>
-                <td>Submit ZIP (photos, circuit, code, readme)</td>
-                <td>
-                  <span
-                    class="rounded-full border border-white/20 px-2 py-0.5 text-xs"
-                    >Planned</span
-                  >
-                </td>
-              </tr>
-              <tr>
-                <td class="py-2">Nov 28</td>
-                <td>Optional bonus report</td>
-                <td>
-                  <span
-                    class="rounded-full border border-white/20 px-2 py-0.5 text-xs"
-                    >Optional</span
-                  >
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- TEAM -->
-      <section
-        id="team"
-        class="scroll-mt-24 rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-lg backdrop-blur"
-      >
-        <h2 class="text-xl font-semibold">Team & Work Split</h2>
-        <div class="mt-2 overflow-x-auto">
-          <table class="w-full table-auto text-sm">
-            <thead class="text-left text-slate-300">
-              <tr>
-                <th class="py-2">Member</th>
-                <th>Role</th>
-                <th>Responsibilities</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-white/10">
-              <tr>
-                <td class="py-2">Your Name</td>
-                <td>Hardware Lead</td>
-                <td>Wiring, relay safety, sensor calibration, photos</td>
-              </tr>
-              <tr>
-                <td class="py-2">Classmate Name</td>
-                <td>Software Lead</td>
-                <td>GPIO/GUI code, logging, packaging</td>
-              </tr>
-              <tr>
-                <td class="py-2">—</td>
-                <td>Testing</td>
-                <td>Test plan, stability runs, demo rehearsal</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- BOM -->
-      <section
-        id="bom"
-        class="scroll-mt-24 rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-lg backdrop-blur"
-      >
-        <h2 class="text-xl font-semibold">Bill of Materials (BOM)</h2>
-        <div class="mt-2 overflow-x-auto">
-          <table class="w-full table-auto text-sm">
-            <thead class="text-left text-slate-300">
-              <tr>
-                <th class="py-2">Item</th>
-                <th>Notes</th>
-                <th>Qty</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-white/10">
-              <tr>
-                <td class="py-2">Raspberry Pi 4 + 32GB microSD + 3A PSU</td>
-                <td>Main controller with GPIO</td>
-                <td>1</td>
-              </tr>
-              <tr>
-                <td class="py-2">
-                  Soil Moisture Sensor (capacitive preferred)
-                </td>
-                <td>Digital (DO) or analog via MCP3008</td>
-                <td>1</td>
-              </tr>
-              <tr>
-                <td class="py-2">MCP3008 ADC (SPI)</td>
-                <td>Only if sensor is analog-only</td>
-                <td>1</td>
-              </tr>
-              <tr>
-                <td class="py-2">5V Relay Module (optocoupled)</td>
-                <td>Controls pump safely</td>
-                <td>1</td>
-              </tr>
-              <tr>
-                <td class="py-2">5V Submersible Pump + tubing</td>
-                <td>Water delivery</td>
-                <td>1</td>
-              </tr>
-              <tr>
-                <td class="py-2">External 5V supply for pump</td>
-                <td>Dedicated motor power</td>
-                <td>1</td>
-              </tr>
-              <tr>
-                <td class="py-2">Breadboard + jumper wires</td>
-                <td>Prototyping</td>
-                <td>—</td>
-              </tr>
-              <tr>
-                <td class="py-2">LED + 330–1kΩ resistor (optional)</td>
-                <td>Status indicator</td>
-                <td>1</td>
-              </tr>
-              <tr>
-                <td class="py-2">Buzzer (optional)</td>
-                <td>Audible alert</td>
-                <td>1</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- SAFETY -->
-      <section
-        id="safety"
-        class="scroll-mt-24 rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-lg backdrop-blur"
-      >
-        <h2 class="text-xl font-semibold">Safety & Reliability</h2>
-        <ul class="mt-2 list-disc space-y-1 pl-5">
-          <li>
-            Use a <strong>separate 5V supply</strong> for the pump. Share
-            <strong>common ground</strong> with the Pi.
-          </li>
-          <li>
-            Keep electronics above water line; drip loops; avoid spills near the
-            Pi.
-          </li>
-          <li>
-            Start with pump disconnected; confirm relay logic (active LOW/HIGH)
-            first.
-          </li>
-          <li>
-            Enforce <strong>max pump-on time</strong> and
-            <strong>cooldown</strong> in software.
-          </li>
-        </ul>
-      </section>
-
-      <!-- BUILD & TEST -->
-      <section
-        id="buildtest"
-        class="scroll-mt-24 rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-lg backdrop-blur"
-      >
-        <h2 class="text-xl font-semibold">Build & Test Checklist</h2>
-        <ul class="mt-2 list-disc space-y-1 pl-5">
-          <li>Pi updated; Python deps installed; SPI enabled if needed.</li>
-          <li>
-            Relay clicks on command; sensor readings sensible (air/dry/wet
-            distinct).
-          </li>
-          <li>
-            Pump runs via relay on separate 5V; Pi stays stable (no brown-outs).
-          </li>
-          <li>
-            GUI: live moisture, manual button, logs; threshold slider (analog).
-          </li>
-          <li>Stability: 30–50 auto cycles; photos & screenshots captured.</li>
-        </ul>
-      </section>
-
-      <!-- FAQ -->
-      <section
-        id="faq"
-        class="scroll-mt-24 rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-lg backdrop-blur"
-      >
-        <h2 class="text-xl font-semibold">FAQ / Troubleshooting</h2>
-        <div class="mt-2 space-y-2">
-          <p>
-            <strong>Relay always on?</strong> Your board might be active-LOW.
-            Flip logic with <code>RELAY_ACTIVE_LOW = True</code>.
-          </p>
-          <p>
-            <strong>Pi reboots when pump starts?</strong> The pump must have its
-            own 5V supply; only grounds are shared.
-          </p>
-          <p>
-            <strong>Sensor reads backwards?</strong> Digital modules vary:
-            sometimes 0=dry, 1=wet. Test in air/water to confirm.
-          </p>
-          <p>
-            <strong>No analog values?</strong> Enable SPI and check MCP3008
-            wiring; verify <code>SPI_BUS/DEVICE</code>.
-          </p>
-        </div>
-      </section>
-
-      <!-- REFERENCES -->
-      <section
-        id="references"
-        class="scroll-mt-24 rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-lg backdrop-blur"
-      >
-        <h2 class="text-xl font-semibold">References</h2>
-        <ul class="mt-2 list-disc space-y-1 pl-5">
-          <li>Course project handout (deadlines, requirements).</li>
-          <li>GPIO docs: RPi.GPIO / gpiozero.</li>
-          <li>MCP3008 SPI usage examples.</li>
-          <li>Relay module datasheet (active LOW/HIGH).</li>
-        </ul>
-      </section>
-
-      <!-- DOWNLOADS -->
-      <section
-        id="downloads"
-        class="scroll-mt-24 rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-lg backdrop-blur"
-      >
-        <h2 class="text-xl font-semibold">Downloads</h2>
-        <ul class="mt-2 list-disc space-y-1 pl-5">
-          <li>
-            <a class="text-indigo-300 hover:text-white" href="#"
-              >Source Code (ZIP)</a
-            >
-            – add after you push your code.
-          </li>
-          <li>
-            <a class="text-indigo-300 hover:text-white" href="#"
-              >Circuit Diagram (PNG)</a
-            >
-            – export from Fritzing/KiCad and link here.
-          </li>
-          <li>
-            <a class="text-indigo-300 hover:text-white" href="#"
-              >Slides (PDF)</a
-            >
-            – bonus report or in-class deck.
-          </li>
-        </ul>
-        <p class="mt-4">
-          <a
-            class="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-slate-900 px-4 py-2 font-semibold hover:bg-slate-800"
-            href="#overview"
-            >Back to top ↑</a
-          >
-        </p>
-      </section>
-
-      <p class="my-10 text-center text-sm text-slate-400">
-        © 2025 – Douglas College CMPT 2200 • Team (Anand, Marcus) • Built with
-        Tailwind CSS
-      </p>
     </main>
 
-    <!-- Scripts -->
-    <script>
-      // Mobile nav toggle
-      const navBtn = document.getElementById("navToggle");
-      const mobileNav = document.getElementById("mobileNav");
-      const iconOpen = document.getElementById("iconOpen");
-      const iconClose = document.getElementById("iconClose");
-      navBtn?.addEventListener("click", () => {
-        const open = mobileNav.classList.toggle("hidden") === false;
-        navBtn.setAttribute("aria-expanded", String(open));
-        iconOpen.classList.toggle("hidden", open);
-        iconClose.classList.toggle("hidden", !open);
-      });
-      // Close menu on link click (mobile)
-      mobileNav?.querySelectorAll("a").forEach((a) => {
-        a.addEventListener("click", () => {
-          mobileNav.classList.add("hidden");
-          navBtn.setAttribute("aria-expanded", "false");
-          iconOpen.classList.remove("hidden");
-          iconClose.classList.add("hidden");
-        });
-      });
-      // Smooth scrolling
-      document.querySelectorAll('a[href^="#"]').forEach((a) => {
-        a.addEventListener("click", (e) => {
-          const href = a.getAttribute("href");
-          if (href && href.length > 1) {
-            e.preventDefault();
-            const el = document.querySelector(href);
-            if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-          }
-        });
-      });
-    </script>
+    <footer id="references" class="bg-slate-950 border-t border-white/10 pt-16 pb-8">
+      <div class="mx-auto max-w-6xl px-6">
+        <div class="grid md:grid-cols-4 gap-8 mb-12">
+          <div class="col-span-2">
+            <h3 class="text-white font-bold text-lg mb-4">PPWS Project</h3>
+            <p class="text-slate-500 text-sm leading-relaxed max-w-xs">
+              A final term project created for CMPT 2200. This project demonstrates the integration of embedded systems, threading, and GUI development.
+            </p>
+          </div>
+          <div>
+            <h4 class="text-white font-semibold mb-4">Documentation</h4>
+            <ul class="space-y-2 text-sm text-slate-500">
+              <li><a href="https://sourceforge.net/p/raspberry-gpio-python/wiki/Home/" class="hover:text-emerald-400">RPi.GPIO Documentation</a></li>
+              <li><a href="https://docs.python.org/3/library/tkinter.html" class="hover:text-emerald-400">Tkinter Reference</a></li>
+              <li><a href="https://www.raspberrypi.com/documentation/" class="hover:text-emerald-400">Raspberry Pi Hardware</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-white font-semibold mb-4">Libraries Used</h4>
+            <ul class="space-y-2 text-sm text-slate-500">
+              <li>RPi.GPIO</li>
+              <li>Tkinter (Standard Lib)</li>
+              <li>Threading</li>
+              <li>Time / Datetime</li>
+            </ul>
+          </div>
+        </div>
+        
+        <div class="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p class="text-xs text-slate-600">© 2025 Douglas College Team (Anand, Marcus).</p>
+          <div class="flex gap-4">
+            <a href="#" class="text-slate-600 hover:text-white text-xs">MIT License</a>
+            <a href="#" class="text-slate-600 hover:text-white text-xs">Report Issue</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
   </body>
 </html>

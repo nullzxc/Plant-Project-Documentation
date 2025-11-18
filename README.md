@@ -1,61 +1,63 @@
-# 🌿 Plant Watering System (Raspberry Pi + Python GUI)
+# 🌱 PPWS - Pi Plant Watering System
 
-Raspberry Pi reads soil moisture and drives a relay-controlled 5V pump to keep soil within a healthy range.  
-Includes a **Tkinter GUI**, optional **analog mode (MCP3008)**, safety guardrails, logs, and a printable documentation website.
+![Python](https://img.shields.io/badge/Python-3.9%2B-blue?style=for-the-badge&logo=python)
+![Platform](https://img.shields.io/badge/Platform-Raspberry%20Pi-red?style=for-the-badge&logo=raspberry-pi)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-> Demo-ready for CMPT 2200 / “Designing with Raspberry Pi” — but generic enough for anyone building an auto-watering rig.
+**PPWS** is an automated gardening assistant powered by the Raspberry Pi. It monitors soil moisture levels in real-time, automatically waters your plant when it gets thirsty, and creates beautiful timelapse videos of your plant's growth using the Pi Camera.
 
----
-
-## Table of Contents
-- [Features](#features)
-- [Bill of Materials](#bill-of-materials)
-- [System Overview](#system-overview)
-- [Pin Map](#pin-map)
-- [Repository Structure](#repository-structure)
-- [Setup](#setup)
-- [Run](#run)
-- [Calibration](#calibration)
-- [Safety Notes](#safety-notes)
-- [Troubleshooting](#troubleshooting)
-- [Screenshots](#screenshots)
-- [Docs Website (Optional)](#docs-website-optional)
-- [Roadmap](#roadmap)
-- [License](#license)
-- [Credits](#credits)
+The project features a modern, touch-friendly **Tkinter GUI** optimized for Raspberry Pi touchscreens.
 
 ---
 
-## Features
-- ✅ **GPIO Input**: digital soil sensor (DO) or analog via **MCP3008** (SPI)
-- ✅ **GPIO Output**: relay → 5V pump; optional status LED & buzzer
-- ✅ **GUI**: Tkinter app with live moisture, manual water, threshold (analog), log window
-- ✅ **Guardrails**: max-on seconds, cooldown, safe relay defaults, cleanup on exit
-- ✅ **Stability**: designed for repeated cycles without brown-outs (separate pump PSU)
-- ✅ **Docs**: single-file Tailwind site for printing/submission (see `/docs/index.html`)
+## ✨ Features
+
+* **💧 Auto-Watering:** Continuously monitors soil moisture sensors and activates the pump relay when the soil is dry.
+* **🎮 Manual Control:** "Hold-to-water" button for manual care.
+* **📸 Timelapse Engine:** Captures photos at set intervals and renders them into a video to track plant growth.
+* **💡 Light Simulation:** Controls RGB LEDs to simulate growth lights (or status indicators).
+* **🌙 Dark Mode GUI:** A polished, eye-friendly interface built with Python Tkinter.
 
 ---
 
-## Bill of Materials
-| Item | Notes | Qty |
-|---|---|---:|
-| Raspberry Pi 4 + 32GB microSD + 3A PSU | Main controller | 1
-| Soil Moisture Sensor (capacitive preferred) | Digital (DO) **or** analog via MCP3008 | 1
-| MCP3008 ADC (SPI) | Only if your sensor is analog-only | 1
-| 5V Relay Module (optocoupled) | Controls pump safely | 1
-| 5V Submersible Pump + tubing | Water delivery | 1
-| External 5V supply for pump | **Separate** from Pi | 1
-| Breadboard + jumper wires | Prototyping | —
-| LED + 330–1kΩ resistor | Status indicator (optional) | 1
-| Buzzer (active) | Optional | 1
+## 🛠️ Hardware Required
+
+* **Raspberry Pi 4** (or 3B+)
+* **Capacitive Soil Moisture Sensor** (v1.2 recommended)
+* **5V Relay Module** (Active LOW)
+* **Mini Submersible Water Pump** (3V-5V) + Tubing
+* **Raspberry Pi Camera Module**
+* **External Power Supply** (For the pump - **Important!**)
+* **Breadboard & Jumper Wires**
+* **LEDs + Resistors** (Optional, for status)
 
 ---
 
-## System Overview
+## 🔌 Circuit Diagram & Wiring
 
-```text
-Soil Sensor (analog) → MCP3008 → SPI → Raspberry Pi → Python Logic
-                                        ├─ Tkinter GUI (threshold/log)
-                                        └─ Relay (BCM 23) → Pump + 5V Supply
+Below is the wiring diagram for the system.
 
-Optional: LED (BCM 24) status, Buzzer (BCM 18)
+> **⚠️ SAFETY WARNING:** Do not power the water pump directly from the Raspberry Pi's 5V pin. Motors draw high current and can damage your Pi. Use an external power source (like a battery pack) for the pump, connecting the **Grounds** together.
+
+![Wiring Diagram](assets/Circuit_Diagram.jpg)
+
+### Pin Mapping (BCM)
+
+| Component | BCM Pin | Physical Pin | Note |
+| :--- | :--- | :--- | :--- |
+| **Moisture Sensor** | GPIO 16 | Pin 36 | Input (High = Dry) |
+| **Pump Relay** | GPIO 20 | Pin 38 | Output (Active Low) |
+| **LED 1** | GPIO 5 | Pin 29 | Status Light |
+| **LED 2** | GPIO 6 | Pin 31 | Status Light |
+| **LED 3** | GPIO 13 | Pin 33 | Status Light |
+
+---
+
+## 🚀 Installation
+
+### 1. System Prerequisites
+Update your Raspberry Pi and install the necessary system packages for Python Tkinter and GPIO control.
+
+```bash
+sudo apt update
+sudo apt install python3-tk python3-pip
