@@ -9,10 +9,10 @@ The project features a modern **Tkinter GUI** for local control and an **Email L
 
 ## 🖼️ Prototype Gallery
 
-![Prototype Front View](assets/Front_UI.jpg)
+![Prototype Front View](assets/Front_UI.png)
 *Figure 1: Front view of the enclosure and UI.*
 
-![Internal Wiring](assets/Circuit_Diagram.png.jpg)
+![Internal Wiring](assets/Circuit_Diagram.png)
 *Figure 2: Internal wiring and component layout.*
 
 ![Internal Wiring](assets/PPWS_Realview.png)
