@@ -5,16 +5,24 @@
 
 **PPWS** is an automated gardening assistant powered by the Raspberry Pi. It monitors soil moisture levels in real-time, automatically waters your plant when it gets thirsty, and creates beautiful timelapse videos of your plant's growth using the Pi Camera.
 
-The project features a modern, touch-friendly **Tkinter GUI** optimized for Raspberry Pi touchscreens.
+The project features a modern **Tkinter GUI** for local control and an **Email Listener** for remote commands.
+
+## 🖼️ Prototype Gallery
+
+![Prototype Front View](assets/prototype_front.jpg)
+*Figure 1: Front view of the enclosure and UI.*
+
+![Internal Wiring](assets/prototype_wiring.jpg)
+*Figure 2: Internal wiring and component layout.*
 
 ---
 
 ## ✨ Features
 
 * **💧 Auto-Watering:** Continuously monitors soil moisture sensors and activates the pump relay when the soil is dry.
-* **🎮 Manual Control:** "Hold-to-water" button for manual care.
-* **📸 Timelapse Engine:** Captures photos at set intervals and renders them into a video to track plant growth.
-* **💡 Light Simulation:** Controls RGB LEDs to simulate growth lights (or status indicators).
+* **📧 Remote Control:** Send email commands to the Pi to request status updates, photos, or videos.
+* **📸 Timelapse Engine:** Captures photos at set intervals and renders them into a video (`.mp4`) using FFmpeg.
+* **🎮 Manual Control:** Touchscreen-friendly "Hold-to-water" button and LED toggles.
 * **🌙 Dark Mode GUI:** A polished, eye-friendly interface built with Python Tkinter.
 
 ---
@@ -25,20 +33,17 @@ The project features a modern, touch-friendly **Tkinter GUI** optimized for Rasp
 * **Capacitive Soil Moisture Sensor** (v1.2 recommended)
 * **5V Relay Module** (Active LOW)
 * **Mini Submersible Water Pump** (3V-5V) + Tubing
-* **Raspberry Pi Camera Module**
+* **Raspberry Pi Camera Module** (Works with libcamera / Picamera2)
 * **External Power Supply** (For the pump - **Important!**)
 * **Breadboard & Jumper Wires**
-* **LEDs + Resistors** (Optional, for status)
+* **3x LEDs** (Status indicators)
 
 ---
 
 ## 🔌 Circuit Diagram & Wiring
 
-Below is the wiring diagram for the system.
+> **⚠️ SAFETY WARNING:** Do not power the water pump directly from the Raspberry Pi's 5V pin. Motors draw high current and can damage your Pi. Use an external power source for the pump, connecting the **Grounds** together.
 
-> **⚠️ SAFETY WARNING:** Do not power the water pump directly from the Raspberry Pi's 5V pin. Motors draw high current and can damage your Pi. Use an external power source (like a battery pack) for the pump, connecting the **Grounds** together.
-
-![Wiring Diagram](assets/Circuit_Diagram.png)
 
 ### Pin Mapping (BCM)
 
@@ -47,16 +52,16 @@ Below is the wiring diagram for the system.
 | **Moisture Sensor** | GPIO 16 | Pin 36 | Input (High = Dry) |
 | **Pump Relay** | GPIO 20 | Pin 38 | Output (Active Low) |
 | **LED 1** | GPIO 5 | Pin 29 | Status Light |
-| **LED 2** | GPIO 6 | Pin 31 | Status Light |
+| **LED 2** | GPIO 12 | Pin 32 | Status Light (Updated) |
 | **LED 3** | GPIO 13 | Pin 33 | Status Light |
 
 ---
 
-## 🚀 Installation
+## 🚀 Installation & Setup
 
 ### 1. System Prerequisites
-Update your Raspberry Pi and install the necessary system packages for Python Tkinter and GPIO control.
+Update your Raspberry Pi and install the necessary system packages. **FFmpeg** is required for video rendering.
 
 ```bash
 sudo apt update
-sudo apt install python3-tk python3-pip
+sudo apt install python3-tk python3-pip ffmpeg libcamera-apps
